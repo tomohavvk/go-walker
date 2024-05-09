@@ -1,0 +1,11 @@
+version: '3.2'
+
+services:
+  postgres:
+    image: timescale/timescaledb:2.10.0-pg15
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: walker_service
+    ports:
+      - 5432:5432
