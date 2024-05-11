@@ -1,4 +1,4 @@
-package configs
+package config
 
 import (
 	"github.com/caarlos0/env/v9"
@@ -16,7 +16,7 @@ type DBConfig struct {
 
 type HttpServer struct {
 	Host string `env:"SERVER_HOST" envDefault:"localhost"`
-	Port uint16 `env:"SERVER_PORT" envDefault:"9000"`
+	Port uint16 `env:"SERVER_PORT" envDefault:"8080"`
 }
 
 type AppConfig struct {

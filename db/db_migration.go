@@ -6,10 +6,10 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/tomohavvk/go-walker/configs"
+	"github.com/tomohavvk/go-walker/config"
 )
 
-func PerformMigration(cfg configs.DBConfig) error {
+func PerformMigration(cfg config.DBConfig) error {
 	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Name)
 
 	sourceURL := "file://./db/migration"
