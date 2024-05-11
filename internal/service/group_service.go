@@ -23,6 +23,20 @@ func NewGroupService(logger slog.Logger, groupRepository repository.GroupReposit
 	}
 }
 
+func (s GroupService) SearchGroups(deviceId string, searchGroups ws.SearchGroupsIn) (*ws.SearchGroupsOut, error) {
+	result, err := s.groupRepository.SearchGroups(deviceId, searchGroups.Filter, searchGroups.Limit, searchGroups.Offset)
+	if err != nil {
+		return nil, err
+	}
+	var groups = make([]views.GroupView, len(result))
+
+	for i, group := range result {
+		groups[i] = group.AsView(true)
+	}
+
+	return &ws.SearchGroupsOut{Groups: groups}, nil
+}
+
 func (s GroupService) GetAllByDeviceId(deviceId string, groupGet ws.GetGroupsIn) (*ws.GetGroupsOut, error) {
 	result, err := s.groupRepository.FindAllByDeviceId(deviceId, groupGet.Limit, groupGet.Offset)
 	if err != nil {

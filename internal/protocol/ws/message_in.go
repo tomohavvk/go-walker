@@ -10,6 +10,7 @@ const (
 	PersistLocationInType     MessageInType = "persist_location"
 	CreateGroupInType         MessageInType = "create_group"
 	GetGroupsInType           MessageInType = "get_groups"
+	SearchGroupsInType        MessageInType = "search_groups"
 	IsPublicIdAvailableInType MessageInType = "is_public_id_available"
 )
 
@@ -44,6 +45,12 @@ type CreateGroupIn struct {
 type GetGroupsIn struct {
 	Limit  int `json:"limit"`
 	Offset int `json:"offset"`
+}
+
+type SearchGroupsIn struct {
+	Filter string `json:"filter"`
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
 }
 
 type IsPublicIdAvailableIn struct {

@@ -12,6 +12,7 @@ const (
 	PersistLocationOutType     MessageOutType = "persist_location"
 	CreateGroupOutType         MessageOutType = "create_group"
 	GetGroupsOutType           MessageOutType = "get_groups"
+	SearchGroupsOutType        MessageOutType = "search_groups"
 	IsPublicIdAvailableOutType MessageOutType = "is_public_id_available"
 )
 
@@ -27,6 +28,10 @@ type CreateGroupOut struct {
 }
 
 type GetGroupsOut struct {
+	Groups []views.GroupView
+}
+
+type SearchGroupsOut struct {
 	Groups []views.GroupView
 }
 

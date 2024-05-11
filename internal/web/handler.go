@@ -31,23 +31,26 @@ func (h WSMessageHandler) handleMessage(deviceId string, messageIn ws.MessageIn)
 
 	switch messageIn.Type {
 	case ws.PersistLocationInType:
-		return h.handleLocationPersist(deviceId, messageIn)
+		return h.handlePersistLocation(deviceId, messageIn)
 
 	case ws.CreateGroupInType:
-		return h.handleGroupCreate(deviceId, messageIn)
+		return h.handleCreateGroup(deviceId, messageIn)
 
 	case ws.GetGroupsInType:
-		return h.handleGroupsGet(deviceId, messageIn)
+		return h.handleGetGroups(deviceId, messageIn)
+
+	case ws.SearchGroupsInType:
+		return h.handleSearchGroups(deviceId, messageIn)
 
 	case ws.IsPublicIdAvailableInType:
-		return h.handlePublicIdAvailableCheck(messageIn)
+		return h.handleIsPublicIdAvailable(messageIn)
 
 	default:
 		return h.asWSError(fmt.Errorf("unexpected message: %v", messageIn.Type))
 	}
 }
 
-func (h WSMessageHandler) handleLocationPersist(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+func (h WSMessageHandler) handlePersistLocation(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
 	var locationPersist ws.LocationPersistIn
 	if err := json.Unmarshal(messageIn.Data, &locationPersist); err != nil {
 		return h.asWSError(err)
@@ -65,7 +68,7 @@ func (h WSMessageHandler) handleLocationPersist(deviceId string, messageIn ws.Me
 	}
 }
 
-func (h WSMessageHandler) handleGroupCreate(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+func (h WSMessageHandler) handleCreateGroup(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
 	var groupCreate ws.CreateGroupIn
 	if err := json.Unmarshal(messageIn.Data, &groupCreate); err != nil {
 		return h.asWSError(err)
@@ -83,7 +86,7 @@ func (h WSMessageHandler) handleGroupCreate(deviceId string, messageIn ws.Messag
 	}
 }
 
-func (h WSMessageHandler) handleGroupsGet(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+func (h WSMessageHandler) handleGetGroups(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
 	var groupsGet ws.GetGroupsIn
 	if err := json.Unmarshal(messageIn.Data, &groupsGet); err != nil {
 		return h.asWSError(err)
@@ -100,8 +103,25 @@ func (h WSMessageHandler) handleGroupsGet(deviceId string, messageIn ws.MessageI
 		Data: data,
 	}
 }
+func (h WSMessageHandler) handleSearchGroups(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+	var searchGroups ws.SearchGroupsIn
+	if err := json.Unmarshal(messageIn.Data, &searchGroups); err != nil {
+		return h.asWSError(err)
+	}
 
-func (h WSMessageHandler) handlePublicIdAvailableCheck(messageIn ws.MessageIn) ws.MessageOut {
+	result, err := h.groupService.SearchGroups(deviceId, searchGroups)
+	if err != nil {
+		return h.asWSError(err)
+	}
+
+	data, _ := json.Marshal(result.Groups)
+	return ws.MessageOut{
+		Type: ws.SearchGroupsOutType,
+		Data: data,
+	}
+}
+
+func (h WSMessageHandler) handleIsPublicIdAvailable(messageIn ws.MessageIn) ws.MessageOut {
 	var publicIdAvailableCheck ws.IsPublicIdAvailableIn
 	if err := json.Unmarshal(messageIn.Data, &publicIdAvailableCheck); err != nil {
 		return h.asWSError(err)
