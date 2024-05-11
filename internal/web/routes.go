@@ -3,7 +3,7 @@ package web
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/tomohavvk/go-walker/internal/protocol"
+	"github.com/tomohavvk/go-walker/internal/protocol/ws"
 	"github.com/tomohavvk/go-walker/internal/service"
 	"log/slog"
 	"net/http"
@@ -77,7 +77,7 @@ func (h Routes) handle(deviceId string, writer http.ResponseWriter, request *htt
 	}(conn)
 
 	for {
-		var messageIn protocol.MessageIn
+		var messageIn ws.MessageIn
 
 		if err := conn.ReadJSON(&messageIn); err != nil {
 			h.logger.Error("Error receiving message:", "err", err.Error())

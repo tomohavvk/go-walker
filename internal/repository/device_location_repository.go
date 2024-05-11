@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/tomohavvk/go-walker/internal/model"
+	"github.com/tomohavvk/go-walker/internal/repository/entities"
 	_ "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -17,7 +17,7 @@ func NewDeviceLocationRepository(db *gorm.DB) DeviceLocationRepository {
 	}
 }
 
-func (r DeviceLocationRepository) UpsertBatch(locations []model.DeviceLocation) error {
+func (r DeviceLocationRepository) UpsertBatch(locations []entities.DeviceLocation) error {
 	result := r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "device_id"}, {Name: "time"}},
 		DoNothing: true,

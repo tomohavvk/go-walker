@@ -31,13 +31,18 @@ func main() {
 	}
 
 	logger := logging.NewLogger(os.Stdout, slog.Level(cfg.LogLevel))
-	var deviceRepository = repository.NewDeviceRepository(conn)
-	var deviceLocationRepository = repository.NewDeviceLocationRepository(conn)
-	var deviceService = service.NewDeviceService(logger, deviceRepository)
-	var deviceLocationService = service.NewDeviceLocationService(logger, deviceLocationRepository)
-	var wsHandler = web.NewWSMessageHandler(logger, deviceService, deviceLocationService)
-	var routes = web.NewRoutes(logger, wsHandler, deviceService)
-	var server = newHTTPServer(routes, cfg.HttpServer)
+
+	deviceRepository := repository.NewDeviceRepository(conn)
+	groupRepository := repository.NewGroupRepository(conn)
+	deviceLocationRepository := repository.NewDeviceLocationRepository(conn)
+
+	deviceService := service.NewDeviceService(logger, deviceRepository)
+	groupService := service.NewGroupService(logger, groupRepository)
+	deviceLocationService := service.NewDeviceLocationService(logger, deviceLocationRepository)
+
+	wsHandler := web.NewWSMessageHandler(logger, deviceService, groupService, deviceLocationService)
+	routes := web.NewRoutes(logger, wsHandler, deviceService)
+	server := newHTTPServer(routes, cfg.HttpServer)
 
 	interruptSignal := make(chan os.Signal)
 	signal.Notify(interruptSignal, os.Interrupt)

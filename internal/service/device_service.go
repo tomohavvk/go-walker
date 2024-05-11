@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/tomohavvk/go-walker/internal/model"
 	"github.com/tomohavvk/go-walker/internal/repository"
+	"github.com/tomohavvk/go-walker/internal/repository/entities"
 	"log/slog"
 	"time"
 )
@@ -20,7 +20,7 @@ func NewDeviceService(logger slog.Logger, deviceRepository repository.DeviceRepo
 }
 
 func (s DeviceService) Register(deviceId string) error {
-	var device = model.Device{
+	var device = entities.Device{
 		Id:        deviceId,
 		CreatedAt: time.Now(),
 	}

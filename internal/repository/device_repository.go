@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/tomohavvk/go-walker/internal/model"
+	"github.com/tomohavvk/go-walker/internal/repository/entities"
 	_ "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -17,7 +17,7 @@ func NewDeviceRepository(db *gorm.DB) DeviceRepository {
 	}
 }
 
-func (r DeviceRepository) Upsert(device model.Device) error {
+func (r DeviceRepository) Upsert(device entities.Device) error {
 	result := r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
 		DoNothing: true,
