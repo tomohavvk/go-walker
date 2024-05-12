@@ -34,13 +34,15 @@ func main() {
 
 	deviceRepository := repository.NewDeviceRepository(conn)
 	groupRepository := repository.NewGroupRepository(conn)
+	groupMessagesRepository := repository.NewGroupMessagesRepository(conn)
 	deviceLocationRepository := repository.NewDeviceLocationRepository(conn)
 
 	deviceService := service.NewDeviceService(logger, deviceRepository)
 	groupService := service.NewGroupService(logger, groupRepository)
+	groupMessagesService := service.NewGroupMessagesService(logger, groupMessagesRepository)
 	deviceLocationService := service.NewDeviceLocationService(logger, deviceLocationRepository)
 
-	wsHandler := web.NewWSMessageHandler(logger, deviceService, groupService, deviceLocationService)
+	wsHandler := web.NewWSMessageHandler(logger, deviceService, groupService, groupMessagesService, deviceLocationService)
 	routes := web.NewRoutes(logger, wsHandler, deviceService)
 	server := newHTTPServer(routes, cfg.HttpServer)
 

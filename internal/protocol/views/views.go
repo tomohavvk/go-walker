@@ -14,3 +14,16 @@ type GroupView struct {
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
+
+type GroupMessageView struct {
+	GroupId        string    `json:"group_id"`
+	AuthorDeviceId string    `json:"author_device_id"`
+	Message        string    `json:"message"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+type DeviceGroupView struct {
+	GroupId   string    `json:"group_id"`
+	DeviceId  string    `json:"device_id"`
+	CreatedAt time.Time `json:"created_at"`
+}

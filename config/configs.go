@@ -15,7 +15,7 @@ type DBConfig struct {
 }
 
 type HttpServer struct {
-	Host string `env:"SERVER_HOST" envDefault:"localhost"`
+	Host string `env:"SERVER_HOST" envDefault:"192.168.0.152"`
 	Port uint16 `env:"SERVER_PORT" envDefault:"8080"`
 }
 

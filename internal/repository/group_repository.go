@@ -17,19 +17,24 @@ func NewGroupRepository(db *gorm.DB) GroupRepository {
 	}
 }
 
-func (r GroupRepository) Insert(group entities.Group, deviceGroup entities.DevicesGroups) error {
+func (r GroupRepository) Insert(group entities.Group, deviceGroup entities.DeviceGroup) error {
+
 	return r.db.Transaction(func(tx *gorm.DB) error {
 
 		if err := tx.Create(&group).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Create(&deviceGroup).Error; err != nil {
+		if err := tx.Table("devices_groups").Create(&deviceGroup).Error; err != nil {
 			return err
 		}
 
 		return nil
 	})
+}
+
+func (r GroupRepository) Join(deviceGroup entities.DeviceGroup) error {
+	return r.db.Table("devices_groups").Create(&deviceGroup).Error
 }
 
 func (r GroupRepository) FindByPublicId(publicId string) (*entities.Group, error) {
@@ -54,7 +59,8 @@ func (r GroupRepository) FindAllByDeviceId(deviceId string, limit int, offset in
            groups.public_id,
            groups.description,
            groups.created_at,
-           groups.updated_at
+           groups.updated_at,
+           true as is_joined
          from
            groups
          join devices_groups on
@@ -91,7 +97,11 @@ func (r GroupRepository) SearchGroups(deviceId string, filter string, limit int,
            groups.public_id,
            groups.description,
            groups.created_at,
-           groups.updated_at
+           groups.updated_at,
+           case
+             when devices_groups.group_id is not null then true
+             else false
+           end as is_joined
          from
            groups
          left join devices_groups on

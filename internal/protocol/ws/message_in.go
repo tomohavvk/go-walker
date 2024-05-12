@@ -9,7 +9,10 @@ type MessageInType string
 const (
 	PersistLocationInType     MessageInType = "persist_location"
 	CreateGroupInType         MessageInType = "create_group"
+	JoinGroupInType           MessageInType = "join_group"
 	GetGroupsInType           MessageInType = "get_groups"
+	CreateGroupMessageInType  MessageInType = "create_group_message"
+	GetGroupMessagesInType    MessageInType = "get_group_messages"
 	SearchGroupsInType        MessageInType = "search_groups"
 	IsPublicIdAvailableInType MessageInType = "is_public_id_available"
 )
@@ -40,6 +43,21 @@ type CreateGroupIn struct {
 	IsPublic    bool    `json:"is_public"`
 	PublicId    *string `json:"public_id,omitempty"`
 	Description *string `json:"description,omitempty"`
+}
+
+type JoinGroupIn struct {
+	GroupId string `json:"group_id"`
+}
+
+type CreateGroupMessageIn struct {
+	GroupId string `json:"group_id"`
+	Message string `json:"message"`
+}
+
+type GetGroupMessagesIn struct {
+	GroupId string `json:"group_id"`
+	Limit   int    `json:"limit"`
+	Offset  int    `json:"offset"`
 }
 
 type GetGroupsIn struct {

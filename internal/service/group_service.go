@@ -31,7 +31,7 @@ func (s GroupService) SearchGroups(deviceId string, searchGroups ws.SearchGroups
 	var groups = make([]views.GroupView, len(result))
 
 	for i, group := range result {
-		groups[i] = group.AsView(true)
+		groups[i] = group.AsView()
 	}
 
 	return &ws.SearchGroupsOut{Groups: groups}, nil
@@ -45,7 +45,7 @@ func (s GroupService) GetAllByDeviceId(deviceId string, groupGet ws.GetGroupsIn)
 	var groups = make([]views.GroupView, len(result))
 
 	for i, group := range result {
-		groups[i] = group.AsView(true)
+		groups[i] = group.AsView()
 	}
 
 	return &ws.GetGroupsOut{Groups: groups}, nil
@@ -65,7 +65,7 @@ func (s GroupService) Create(deviceId string, groupCreate ws.CreateGroupIn) (*ws
 		UpdatedAt:     now,
 	}
 
-	var deviceGroup = entities.DevicesGroups{
+	var deviceGroup = entities.DeviceGroup{
 		DeviceId:  deviceId,
 		GroupId:   group.Id,
 		CreatedAt: now,
@@ -77,7 +77,28 @@ func (s GroupService) Create(deviceId string, groupCreate ws.CreateGroupIn) (*ws
 		return nil, err
 	}
 
-	return &ws.CreateGroupOut{Group: group.AsView(true)}, nil
+	isJoined := true
+	group.IsJoined = &isJoined
+
+	return &ws.CreateGroupOut{Group: group.AsView()}, nil
+}
+
+func (s GroupService) Join(deviceId string, joinGroup ws.JoinGroupIn) (*ws.JoinGroupOut, error) {
+	now := time.Now()
+
+	var deviceGroup = entities.DeviceGroup{
+		DeviceId:  deviceId,
+		GroupId:   joinGroup.GroupId,
+		CreatedAt: now,
+	}
+
+	err := s.groupRepository.Join(deviceGroup)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &ws.JoinGroupOut{DeviceGroup: deviceGroup.AsView()}, nil
 }
 
 func (s GroupService) IsPublicIdAvailable(publicId string) (*ws.IsPublicIdAvailableOut, error) {

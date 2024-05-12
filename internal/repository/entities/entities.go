@@ -31,24 +31,47 @@ type Group struct {
 	Description   *string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+	IsJoined      *bool `gorm:"<-:false"`
 }
 
-type DevicesGroups struct {
+type GroupMessage struct {
+	GroupId        string
+	AuthorDeviceId string
+	Message        string
+	CreatedAt      time.Time
+}
+
+type DeviceGroup struct {
 	DeviceId  string
 	GroupId   string
 	CreatedAt time.Time
 }
 
-func (g Group) AsView(joined bool) views.GroupView {
+func (g Group) AsView() views.GroupView {
+	var isJoined bool = false
+
+	if g.IsJoined != nil {
+		isJoined = *g.IsJoined
+	}
+
 	return views.GroupView{
 		Id:            g.Id,
 		OwnerDeviceId: g.OwnerDeviceId,
 		Name:          g.Name,
-		IsJoined:      joined,
+		IsJoined:      isJoined,
 		IsPublic:      g.IsPublic,
 		PublicId:      g.PublicId,
 		Description:   g.Description,
 		CreatedAt:     g.CreatedAt,
 		UpdatedAt:     g.UpdatedAt,
+	}
+}
+
+func (g DeviceGroup) AsView() views.DeviceGroupView {
+
+	return views.DeviceGroupView{
+		GroupId:   g.GroupId,
+		DeviceId:  g.DeviceId,
+		CreatedAt: g.CreatedAt,
 	}
 }

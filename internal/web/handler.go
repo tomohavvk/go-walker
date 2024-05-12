@@ -12,14 +12,16 @@ type WSMessageHandler struct {
 	logger                slog.Logger
 	deviceService         service.DeviceService
 	groupService          service.GroupService
+	groupMessagesService  service.GroupMessagesService
 	deviceLocationService service.DeviceLocationService
 }
 
-func NewWSMessageHandler(logger slog.Logger, deviceService service.DeviceService, groupService service.GroupService, deviceLocationService service.DeviceLocationService) WSMessageHandler {
+func NewWSMessageHandler(logger slog.Logger, deviceService service.DeviceService, groupService service.GroupService, groupMessagesService service.GroupMessagesService, deviceLocationService service.DeviceLocationService) WSMessageHandler {
 	return WSMessageHandler{
 		logger:                logger,
 		deviceService:         deviceService,
 		groupService:          groupService,
+		groupMessagesService:  groupMessagesService,
 		deviceLocationService: deviceLocationService,
 	}
 }
@@ -36,11 +38,20 @@ func (h WSMessageHandler) handleMessage(deviceId string, messageIn ws.MessageIn)
 	case ws.CreateGroupInType:
 		return h.handleCreateGroup(deviceId, messageIn)
 
+	case ws.JoinGroupInType:
+		return h.handleJoinGroup(deviceId, messageIn)
+
 	case ws.GetGroupsInType:
 		return h.handleGetGroups(deviceId, messageIn)
 
 	case ws.SearchGroupsInType:
 		return h.handleSearchGroups(deviceId, messageIn)
+
+	case ws.CreateGroupMessageInType:
+		return h.handleCreateGroupMessage(deviceId, messageIn)
+
+	case ws.GetGroupMessagesInType:
+		return h.handleGetGroupMessages(messageIn)
 
 	case ws.IsPublicIdAvailableInType:
 		return h.handleIsPublicIdAvailable(messageIn)
@@ -86,6 +97,42 @@ func (h WSMessageHandler) handleCreateGroup(deviceId string, messageIn ws.Messag
 	}
 }
 
+func (h WSMessageHandler) handleCreateGroupMessage(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+	var createMessage ws.CreateGroupMessageIn
+	if err := json.Unmarshal(messageIn.Data, &createMessage); err != nil {
+		return h.asWSError(err)
+	}
+
+	result, err := h.groupMessagesService.Create(deviceId, createMessage)
+	if err != nil {
+		return h.asWSError(err)
+	}
+
+	data, _ := json.Marshal(result)
+	return ws.MessageOut{
+		Type: ws.CreateGroupMessageOutType,
+		Data: data,
+	}
+}
+
+func (h WSMessageHandler) handleGetGroupMessages(messageIn ws.MessageIn) ws.MessageOut {
+	var getMessages ws.GetGroupMessagesIn
+	if err := json.Unmarshal(messageIn.Data, &getMessages); err != nil {
+		return h.asWSError(err)
+	}
+
+	result, err := h.groupMessagesService.GetAllByGroupId(getMessages)
+	if err != nil {
+		return h.asWSError(err)
+	}
+
+	data, _ := json.Marshal(result.Messages)
+	return ws.MessageOut{
+		Type: ws.GetGroupMessagesOutType,
+		Data: data,
+	}
+}
+
 func (h WSMessageHandler) handleGetGroups(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
 	var groupsGet ws.GetGroupsIn
 	if err := json.Unmarshal(messageIn.Data, &groupsGet); err != nil {
@@ -100,6 +147,24 @@ func (h WSMessageHandler) handleGetGroups(deviceId string, messageIn ws.MessageI
 	data, _ := json.Marshal(result.Groups)
 	return ws.MessageOut{
 		Type: ws.GetGroupsOutType,
+		Data: data,
+	}
+}
+
+func (h WSMessageHandler) handleJoinGroup(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+	var joinGroup ws.JoinGroupIn
+	if err := json.Unmarshal(messageIn.Data, &joinGroup); err != nil {
+		return h.asWSError(err)
+	}
+
+	result, err := h.groupService.Join(deviceId, joinGroup)
+	if err != nil {
+		return h.asWSError(err)
+	}
+
+	data, _ := json.Marshal(result.DeviceGroup)
+	return ws.MessageOut{
+		Type: ws.JoinGroupOutType,
 		Data: data,
 	}
 }
