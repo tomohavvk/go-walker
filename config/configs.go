@@ -28,7 +28,7 @@ type AppConfig struct {
 	   LevelWarn  Level = 4
 	   LevelError Level = 8
 	*/
-	LogLevel int `env:"LOG_LEVEL" envDefault:"0"`
+	LogLevel int `env:"LOG_LEVEL" envDefault:"-4"`
 }
 
 func LoadConfig() AppConfig {

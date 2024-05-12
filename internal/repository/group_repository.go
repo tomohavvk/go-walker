@@ -18,7 +18,6 @@ func NewGroupRepository(db *gorm.DB) GroupRepository {
 }
 
 func (r GroupRepository) Insert(group entities.Group, deviceGroup entities.DeviceGroup) error {
-
 	return r.db.Transaction(func(tx *gorm.DB) error {
 
 		if err := tx.Create(&group).Error; err != nil {
@@ -114,4 +113,21 @@ func (r GroupRepository) SearchGroups(deviceId string, filter string, limit int,
            updated_at desc`, deviceId, nameLike, publicIdLike).Scan(&groups).Error
 
 	return groups, err
+}
+
+func (r GroupRepository) FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error) {
+	var onlineDeviceIds []string
+
+	err := r.db.
+		Raw(`
+         select
+           devices_groups.device_id
+         from
+           devices_groups
+         join devices on
+           devices_groups.device_id = devices.id and devices.status = 'online'
+         where
+           devices_groups.group_id = ?`, groupId).Scan(&onlineDeviceIds).Error
+
+	return onlineDeviceIds, err
 }

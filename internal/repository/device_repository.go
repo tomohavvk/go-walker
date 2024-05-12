@@ -5,6 +5,7 @@ import (
 	_ "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"time"
 )
 
 type DeviceRepository struct {
@@ -17,11 +18,16 @@ func NewDeviceRepository(db *gorm.DB) DeviceRepository {
 	}
 }
 
-func (r DeviceRepository) Upsert(device entities.Device) error {
-	result := r.db.Clauses(clause.OnConflict{
+func (r DeviceRepository) Register(device entities.Device) error {
+	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
-		DoNothing: true,
-	}).Create(&device)
+		DoUpdates: clause.Assignments(map[string]interface{}{"status": "online", "updated_at": time.Now()}),
+	}).Create(&device).Error
+}
 
-	return result.Error
+func (r DeviceRepository) Unregister(deviceId string) error {
+	return r.db.Model(&entities.Device{}).
+		Where("id = ?", deviceId).
+		Update("status", "offline").
+		Update("updated_at", time.Now()).Error
 }

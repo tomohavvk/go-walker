@@ -20,10 +20,18 @@ func NewDeviceService(logger slog.Logger, deviceRepository repository.DeviceRepo
 }
 
 func (s DeviceService) Register(deviceId string) error {
+	now := time.Now()
+
 	var device = entities.Device{
 		Id:        deviceId,
+		Status:    "online",
 		CreatedAt: time.Now(),
+		UpdatedAt: now,
 	}
 
-	return s.deviceRepository.Upsert(device)
+	return s.deviceRepository.Register(device)
+}
+
+func (s DeviceService) Unregister(deviceId string) error {
+	return s.deviceRepository.Unregister(deviceId)
 }

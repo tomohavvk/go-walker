@@ -3,11 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/tomohavvk/go-walker/config"
 	"github.com/tomohavvk/go-walker/db"
+	"github.com/tomohavvk/go-walker/internal/api"
+	"github.com/tomohavvk/go-walker/internal/api/ws"
 	"github.com/tomohavvk/go-walker/internal/repository"
 	"github.com/tomohavvk/go-walker/internal/service"
-	"github.com/tomohavvk/go-walker/internal/web"
 	"github.com/tomohavvk/go-walker/logging"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -42,9 +44,14 @@ func main() {
 	groupMessagesService := service.NewGroupMessagesService(logger, groupMessagesRepository)
 	deviceLocationService := service.NewDeviceLocationService(logger, deviceLocationRepository)
 
-	wsHandler := web.NewWSMessageHandler(logger, deviceService, groupService, groupMessagesService, deviceLocationService)
-	routes := web.NewRoutes(logger, wsHandler, deviceService)
-	server := newHTTPServer(routes, cfg.HttpServer)
+	wsHandler := ws.NewWSMessageHandler(logger, deviceService, groupService, groupMessagesService, deviceLocationService)
+
+	engine := gin.Default()
+
+	api.NewRoutes(logger).RegisterHTTPRoutes(engine)
+	ws.NewRoutes(logger, wsHandler, groupService, deviceService).RegisterWSRoutes(engine)
+
+	server := newHTTPServer(engine.Handler(), cfg.HttpServer)
 
 	interruptSignal := make(chan os.Signal)
 	signal.Notify(interruptSignal, os.Interrupt)
@@ -91,7 +98,6 @@ func runDBMigration(cfg config.AppConfig) error {
 	return db.PerformMigration(cfg.DB)
 }
 
-func newHTTPServer(routes web.Routes, cfg config.HttpServer) http.Server {
-
-	return http.Server{Addr: fmt.Sprintf("%s:%d", cfg.Host, cfg.Port), Handler: routes.Setup().Handler()}
+func newHTTPServer(handler http.Handler, cfg config.HttpServer) http.Server {
+	return http.Server{Addr: fmt.Sprintf("%s:%d", cfg.Host, cfg.Port), Handler: handler}
 }

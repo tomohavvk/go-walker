@@ -18,10 +18,8 @@ func NewDeviceLocationRepository(db *gorm.DB) DeviceLocationRepository {
 }
 
 func (r DeviceLocationRepository) UpsertBatch(locations []entities.DeviceLocation) error {
-	result := r.db.Clauses(clause.OnConflict{
+	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "device_id"}, {Name: "time"}},
 		DoNothing: true,
-	}).Create(&locations)
-
-	return result.Error
+	}).Create(&locations).Error
 }

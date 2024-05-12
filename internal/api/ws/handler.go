@@ -1,4 +1,4 @@
-package web
+package ws
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"log/slog"
 )
 
-type WSMessageHandler struct {
+type WebsocketHandler struct {
 	logger                slog.Logger
 	deviceService         service.DeviceService
 	groupService          service.GroupService
@@ -16,8 +16,8 @@ type WSMessageHandler struct {
 	deviceLocationService service.DeviceLocationService
 }
 
-func NewWSMessageHandler(logger slog.Logger, deviceService service.DeviceService, groupService service.GroupService, groupMessagesService service.GroupMessagesService, deviceLocationService service.DeviceLocationService) WSMessageHandler {
-	return WSMessageHandler{
+func NewWSMessageHandler(logger slog.Logger, deviceService service.DeviceService, groupService service.GroupService, groupMessagesService service.GroupMessagesService, deviceLocationService service.DeviceLocationService) WebsocketHandler {
+	return WebsocketHandler{
 		logger:                logger,
 		deviceService:         deviceService,
 		groupService:          groupService,
@@ -26,7 +26,7 @@ func NewWSMessageHandler(logger slog.Logger, deviceService service.DeviceService
 	}
 }
 
-func (h WSMessageHandler) handleMessage(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+func (h WebsocketHandler) handleMessage(deviceId string, messageIn ws.MessageIn, hub *Hub) *ws.MessageOut {
 	if err := json.Unmarshal(messageIn.Data, &messageIn); err != nil {
 		return h.asWSError(err)
 	}
@@ -48,7 +48,7 @@ func (h WSMessageHandler) handleMessage(deviceId string, messageIn ws.MessageIn)
 		return h.handleSearchGroups(deviceId, messageIn)
 
 	case ws.CreateGroupMessageInType:
-		return h.handleCreateGroupMessage(deviceId, messageIn)
+		return h.handleCreateGroupMessage(deviceId, messageIn, hub)
 
 	case ws.GetGroupMessagesInType:
 		return h.handleGetGroupMessages(messageIn)
@@ -61,7 +61,7 @@ func (h WSMessageHandler) handleMessage(deviceId string, messageIn ws.MessageIn)
 	}
 }
 
-func (h WSMessageHandler) handlePersistLocation(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+func (h WebsocketHandler) handlePersistLocation(deviceId string, messageIn ws.MessageIn) *ws.MessageOut {
 	var locationPersist ws.LocationPersistIn
 	if err := json.Unmarshal(messageIn.Data, &locationPersist); err != nil {
 		return h.asWSError(err)
@@ -73,13 +73,13 @@ func (h WSMessageHandler) handlePersistLocation(deviceId string, messageIn ws.Me
 	}
 
 	data, _ := json.Marshal(result)
-	return ws.MessageOut{
+	return &ws.MessageOut{
 		Type: ws.PersistLocationOutType,
 		Data: data,
 	}
 }
 
-func (h WSMessageHandler) handleCreateGroup(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+func (h WebsocketHandler) handleCreateGroup(deviceId string, messageIn ws.MessageIn) *ws.MessageOut {
 	var groupCreate ws.CreateGroupIn
 	if err := json.Unmarshal(messageIn.Data, &groupCreate); err != nil {
 		return h.asWSError(err)
@@ -91,13 +91,13 @@ func (h WSMessageHandler) handleCreateGroup(deviceId string, messageIn ws.Messag
 	}
 
 	data, _ := json.Marshal(result.Group)
-	return ws.MessageOut{
+	return &ws.MessageOut{
 		Type: ws.CreateGroupOutType,
 		Data: data,
 	}
 }
 
-func (h WSMessageHandler) handleCreateGroupMessage(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+func (h WebsocketHandler) handleCreateGroupMessage(deviceId string, messageIn ws.MessageIn, hub *Hub) *ws.MessageOut {
 	var createMessage ws.CreateGroupMessageIn
 	if err := json.Unmarshal(messageIn.Data, &createMessage); err != nil {
 		return h.asWSError(err)
@@ -108,14 +108,17 @@ func (h WSMessageHandler) handleCreateGroupMessage(deviceId string, messageIn ws
 		return h.asWSError(err)
 	}
 
-	data, _ := json.Marshal(result)
-	return ws.MessageOut{
-		Type: ws.CreateGroupMessageOutType,
-		Data: data,
-	}
+	hub.broadcastGroupMessage <- *result
+
+	return nil
+	//data, _ := json.Marshal(result)
+	//return &ws.MessageOut{
+	//	Type: ws.CreateGroupMessageOutType,
+	//	Data: data,
+	//}
 }
 
-func (h WSMessageHandler) handleGetGroupMessages(messageIn ws.MessageIn) ws.MessageOut {
+func (h WebsocketHandler) handleGetGroupMessages(messageIn ws.MessageIn) *ws.MessageOut {
 	var getMessages ws.GetGroupMessagesIn
 	if err := json.Unmarshal(messageIn.Data, &getMessages); err != nil {
 		return h.asWSError(err)
@@ -127,13 +130,13 @@ func (h WSMessageHandler) handleGetGroupMessages(messageIn ws.MessageIn) ws.Mess
 	}
 
 	data, _ := json.Marshal(result.Messages)
-	return ws.MessageOut{
+	return &ws.MessageOut{
 		Type: ws.GetGroupMessagesOutType,
 		Data: data,
 	}
 }
 
-func (h WSMessageHandler) handleGetGroups(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+func (h WebsocketHandler) handleGetGroups(deviceId string, messageIn ws.MessageIn) *ws.MessageOut {
 	var groupsGet ws.GetGroupsIn
 	if err := json.Unmarshal(messageIn.Data, &groupsGet); err != nil {
 		return h.asWSError(err)
@@ -145,13 +148,13 @@ func (h WSMessageHandler) handleGetGroups(deviceId string, messageIn ws.MessageI
 	}
 
 	data, _ := json.Marshal(result.Groups)
-	return ws.MessageOut{
+	return &ws.MessageOut{
 		Type: ws.GetGroupsOutType,
 		Data: data,
 	}
 }
 
-func (h WSMessageHandler) handleJoinGroup(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+func (h WebsocketHandler) handleJoinGroup(deviceId string, messageIn ws.MessageIn) *ws.MessageOut {
 	var joinGroup ws.JoinGroupIn
 	if err := json.Unmarshal(messageIn.Data, &joinGroup); err != nil {
 		return h.asWSError(err)
@@ -163,12 +166,12 @@ func (h WSMessageHandler) handleJoinGroup(deviceId string, messageIn ws.MessageI
 	}
 
 	data, _ := json.Marshal(result.DeviceGroup)
-	return ws.MessageOut{
+	return &ws.MessageOut{
 		Type: ws.JoinGroupOutType,
 		Data: data,
 	}
 }
-func (h WSMessageHandler) handleSearchGroups(deviceId string, messageIn ws.MessageIn) ws.MessageOut {
+func (h WebsocketHandler) handleSearchGroups(deviceId string, messageIn ws.MessageIn) *ws.MessageOut {
 	var searchGroups ws.SearchGroupsIn
 	if err := json.Unmarshal(messageIn.Data, &searchGroups); err != nil {
 		return h.asWSError(err)
@@ -180,13 +183,13 @@ func (h WSMessageHandler) handleSearchGroups(deviceId string, messageIn ws.Messa
 	}
 
 	data, _ := json.Marshal(result.Groups)
-	return ws.MessageOut{
+	return &ws.MessageOut{
 		Type: ws.SearchGroupsOutType,
 		Data: data,
 	}
 }
 
-func (h WSMessageHandler) handleIsPublicIdAvailable(messageIn ws.MessageIn) ws.MessageOut {
+func (h WebsocketHandler) handleIsPublicIdAvailable(messageIn ws.MessageIn) *ws.MessageOut {
 	var publicIdAvailableCheck ws.IsPublicIdAvailableIn
 	if err := json.Unmarshal(messageIn.Data, &publicIdAvailableCheck); err != nil {
 		return h.asWSError(err)
@@ -198,15 +201,15 @@ func (h WSMessageHandler) handleIsPublicIdAvailable(messageIn ws.MessageIn) ws.M
 	}
 
 	data, _ := json.Marshal(result)
-	return ws.MessageOut{
+	return &ws.MessageOut{
 		Type: ws.IsPublicIdAvailableOutType,
 		Data: data,
 	}
 }
 
-func (h WSMessageHandler) asWSError(err error) ws.MessageOut {
+func (h WebsocketHandler) asWSError(err error) *ws.MessageOut {
 	h.logger.Error("error occurred inside handler:", "err", err.Error())
-	return ws.MessageOut{
+	return &ws.MessageOut{
 		Type: ws.ErrorOutType,
 		Data: []byte(fmt.Sprintf("{\"error\":\"%v\"}", err)),
 	}

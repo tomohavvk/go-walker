@@ -4,8 +4,13 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 create table if not exists devices
 (
     id         varchar(64) not null primary key,
-    created_at timestamp   not null
+    status     varchar(7) not null,
+    created_at timestamp   not null,
+    updated_at timestamp   not null
 );
+
+create index if not exists device_id_status_idx on devices (id, status);
+
 
 create table if not exists device_locations
 (

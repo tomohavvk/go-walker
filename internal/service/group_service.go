@@ -113,3 +113,7 @@ func (s GroupService) IsPublicIdAvailable(publicId string) (*ws.IsPublicIdAvaila
 
 	return &ws.IsPublicIdAvailableOut{Available: false}, nil
 }
+
+func (s GroupService) FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error) {
+	return s.groupRepository.FindAllOnlineDevicesIdsByGroupId(groupId)
+}
