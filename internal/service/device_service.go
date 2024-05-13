@@ -8,7 +8,7 @@ import (
 )
 
 type DeviceService interface {
-	Register(deviceId string) error
+	Register(deviceId string, remoteAddr string) error
 	Unregister(deviceId string) error
 }
 
@@ -24,14 +24,15 @@ func NewDeviceService(logger slog.Logger, deviceRepository repository.DeviceRepo
 	}
 }
 
-func (s DeviceServiceImpl) Register(deviceId string) error {
+func (s DeviceServiceImpl) Register(deviceId string, remoteAddr string) error {
 	now := time.Now()
 
 	var device = entities.Device{
-		Id:        deviceId,
-		Status:    "online",
-		CreatedAt: time.Now(),
-		UpdatedAt: now,
+		Id:         deviceId,
+		Status:     "online",
+		RemoteAddr: remoteAddr,
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}
 
 	return s.deviceRepository.Register(device)

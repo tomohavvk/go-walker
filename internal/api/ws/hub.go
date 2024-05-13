@@ -6,6 +6,7 @@ import (
 	"github.com/tomohavvk/go-walker/internal/protocol/ws"
 	"github.com/tomohavvk/go-walker/internal/service"
 	"log/slog"
+	"strings"
 	"time"
 )
 
@@ -41,9 +42,9 @@ func (h Hub) run() {
 	for {
 		select {
 		case client := <-h.register:
-			h.logger.Debug("Registering device with id:", "deviceId", client.deviceId)
+			h.logger.Debug("Registering device with id:", "deviceId", client.deviceId, "remoteAddr", client.conn.RemoteAddr().String())
 
-			if err := h.deviceService.Register(client.deviceId); err != nil {
+			if err := h.deviceService.Register(client.deviceId, strings.Split(client.conn.RemoteAddr().String(), ":")[0]); err != nil {
 				h.logger.Error("Error registering device:", "err", err.Error())
 			} else {
 				h.clients[client.deviceId] = client

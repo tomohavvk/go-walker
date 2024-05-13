@@ -77,7 +77,7 @@ func (h Routes) handle(deviceId string, upgrader websocket.Upgrader, writer http
 			return err
 		}
 
-		h.logger.Info("Received message:", "messageIn", messageIn)
+		//h.logger.Info("Received message:", "messageIn", messageIn)
 
 		messageOut := h.wsHandler.handleMessage(deviceId, messageIn, hub)
 

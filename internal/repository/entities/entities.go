@@ -6,10 +6,11 @@ import (
 )
 
 type Device struct {
-	Id        string
-	Status    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Id         string
+	Status     string
+	RemoteAddr string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type DeviceLocation struct {

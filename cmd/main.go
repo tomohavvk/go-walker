@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/tomohavvk/go-walker/config"
 	"github.com/tomohavvk/go-walker/db"
@@ -46,10 +47,13 @@ func main() {
 
 	wsHandler := ws.NewWSMessageHandler(logger, deviceService, groupService, groupMessagesService, deviceLocationService)
 
-	engine := gin.Default()
+	//engine := gin.Default()
+	engine := gin.New()
 
 	api.NewRoutes(logger).RegisterHTTPRoutes(engine)
 	ws.NewRoutes(logger, wsHandler, groupService, deviceService).RegisterWSRoutes(engine)
+
+	pprof.Register(engine, "debug/pprof")
 
 	server := newHTTPServer(engine.Handler(), cfg.HttpServer)
 
