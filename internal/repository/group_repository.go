@@ -47,8 +47,6 @@ func (r GroupRepository) FindAllByDeviceId(deviceId string, limit int, offset in
 	var groups []entities.Group
 
 	err := r.db.
-		Limit(limit).
-		Offset(offset).
 		Raw(`
          select
            groups.id,
@@ -66,7 +64,7 @@ func (r GroupRepository) FindAllByDeviceId(deviceId string, limit int, offset in
            groups.id = devices_groups.group_id
          where
            devices_groups.device_id = ?
-          order by updated_at desc`, deviceId).Scan(&groups).Error
+          order by updated_at desc offset ? limit ?`, deviceId, offset, limit).Scan(&groups).Error
 
 	return groups, err
 }
@@ -85,8 +83,6 @@ func (r GroupRepository) SearchGroups(deviceId string, filter string, limit int,
 	var publicIdLike = fmt.Sprintf("%s%%", filter)
 
 	err := r.db.
-		Limit(limit).
-		Offset(offset).
 		Raw(`
          select
            groups.id,
@@ -110,7 +106,7 @@ func (r GroupRepository) SearchGroups(deviceId string, filter string, limit int,
            groups.is_public = true
            and (name ilike ? or public_id ilike ?)
          order by
-           updated_at desc`, deviceId, nameLike, publicIdLike).Scan(&groups).Error
+           updated_at desc offset ? limit ?`, deviceId, nameLike, publicIdLike, offset, limit).Scan(&groups).Error
 
 	return groups, err
 }
