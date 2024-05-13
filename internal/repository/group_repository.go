@@ -7,17 +7,26 @@ import (
 	"gorm.io/gorm"
 )
 
-type GroupRepository struct {
+type GroupRepository interface {
+	Insert(group entities.Group, deviceGroup entities.DeviceGroup) error
+	Join(deviceGroup entities.DeviceGroup) error
+	FindByPublicId(publicId string) (*entities.Group, error)
+	FindAllByDeviceId(deviceId string, limit int, offset int) ([]entities.Group, error)
+	SearchGroups(deviceId string, filter string, limit int, offset int) ([]entities.Group, error)
+	FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error)
+}
+
+type GroupRepositoryImpl struct {
 	db *gorm.DB
 }
 
 func NewGroupRepository(db *gorm.DB) GroupRepository {
-	return GroupRepository{
+	return GroupRepositoryImpl{
 		db: db,
 	}
 }
 
-func (r GroupRepository) Insert(group entities.Group, deviceGroup entities.DeviceGroup) error {
+func (r GroupRepositoryImpl) Insert(group entities.Group, deviceGroup entities.DeviceGroup) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 
 		if err := tx.Create(&group).Error; err != nil {
@@ -32,18 +41,18 @@ func (r GroupRepository) Insert(group entities.Group, deviceGroup entities.Devic
 	})
 }
 
-func (r GroupRepository) Join(deviceGroup entities.DeviceGroup) error {
+func (r GroupRepositoryImpl) Join(deviceGroup entities.DeviceGroup) error {
 	return r.db.Table("devices_groups").Create(&deviceGroup).Error
 }
 
-func (r GroupRepository) FindByPublicId(publicId string) (*entities.Group, error) {
+func (r GroupRepositoryImpl) FindByPublicId(publicId string) (*entities.Group, error) {
 	var group entities.Group
 	err := r.db.First(&group, "public_id = ?", publicId).Error
 
 	return &group, err
 }
 
-func (r GroupRepository) FindAllByDeviceId(deviceId string, limit int, offset int) ([]entities.Group, error) {
+func (r GroupRepositoryImpl) FindAllByDeviceId(deviceId string, limit int, offset int) ([]entities.Group, error) {
 	var groups []entities.Group
 
 	err := r.db.
@@ -69,7 +78,7 @@ func (r GroupRepository) FindAllByDeviceId(deviceId string, limit int, offset in
 	return groups, err
 }
 
-func (r GroupRepository) SearchGroups(deviceId string, filter string, limit int, offset int) ([]entities.Group, error) {
+func (r GroupRepositoryImpl) SearchGroups(deviceId string, filter string, limit int, offset int) ([]entities.Group, error) {
 	var groups []entities.Group
 
 	var nameLike string
@@ -111,7 +120,7 @@ func (r GroupRepository) SearchGroups(deviceId string, filter string, limit int,
 	return groups, err
 }
 
-func (r GroupRepository) FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error) {
+func (r GroupRepositoryImpl) FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error) {
 	var onlineDeviceIds []string
 
 	err := r.db.

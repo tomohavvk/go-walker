@@ -8,24 +8,29 @@ import (
 	"time"
 )
 
-type DeviceRepository struct {
+type DeviceRepository interface {
+	Register(device entities.Device) error
+	Unregister(deviceId string) error
+}
+
+type DeviceRepositoryImpl struct {
 	db *gorm.DB
 }
 
 func NewDeviceRepository(db *gorm.DB) DeviceRepository {
-	return DeviceRepository{
+	return DeviceRepositoryImpl{
 		db: db,
 	}
 }
 
-func (r DeviceRepository) Register(device entities.Device) error {
+func (r DeviceRepositoryImpl) Register(device entities.Device) error {
 	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{"status": "online", "updated_at": time.Now()}),
 	}).Create(&device).Error
 }
 
-func (r DeviceRepository) Unregister(deviceId string) error {
+func (r DeviceRepositoryImpl) Unregister(deviceId string) error {
 	return r.db.Model(&entities.Device{}).
 		Where("id = ?", deviceId).
 		Update("status", "offline").

@@ -10,19 +10,23 @@ import (
 	"time"
 )
 
-type DeviceLocationService struct {
+type DeviceLocationService interface {
+	PersistLocations(deviceId string, locations []ws.DeviceLocation) (ws.PersistLocationOut, error)
+}
+
+type DeviceLocationServiceImpl struct {
 	logger                   slog.Logger
 	deviceLocationRepository repository.DeviceLocationRepository
 }
 
 func NewDeviceLocationService(logger slog.Logger, deviceLocationRepository repository.DeviceLocationRepository) DeviceLocationService {
-	return DeviceLocationService{
+	return DeviceLocationServiceImpl{
 		logger:                   logger,
 		deviceLocationRepository: deviceLocationRepository,
 	}
 }
 
-func (s DeviceLocationService) Persist(deviceId string, locations []ws.DeviceLocation) (ws.PersistLocationOut, error) {
+func (s DeviceLocationServiceImpl) PersistLocations(deviceId string, locations []ws.DeviceLocation) (ws.PersistLocationOut, error) {
 	s.logger.Info("locations length", "len", len(locations))
 
 	deviceLocations := make([]entities.DeviceLocation, len(locations))

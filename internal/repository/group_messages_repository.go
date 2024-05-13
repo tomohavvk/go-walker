@@ -6,21 +6,26 @@ import (
 	"gorm.io/gorm"
 )
 
-type GroupMessagesRepository struct {
+type GroupMessagesRepository interface {
+	Insert(groupMessage entities.GroupMessage) error
+	FindAllByGroupId(groupId string, limit int, offset int) ([]entities.GroupMessage, error)
+}
+
+type GroupMessagesRepositoryImpl struct {
 	db *gorm.DB
 }
 
 func NewGroupMessagesRepository(db *gorm.DB) GroupMessagesRepository {
-	return GroupMessagesRepository{
+	return GroupMessagesRepositoryImpl{
 		db: db,
 	}
 }
 
-func (r GroupMessagesRepository) Insert(groupMessage entities.GroupMessage) error {
+func (r GroupMessagesRepositoryImpl) Insert(groupMessage entities.GroupMessage) error {
 	return r.db.Create(&groupMessage).Error
 }
 
-func (r GroupMessagesRepository) FindAllByGroupId(groupId string, limit int, offset int) ([]entities.GroupMessage, error) {
+func (r GroupMessagesRepositoryImpl) FindAllByGroupId(groupId string, limit int, offset int) ([]entities.GroupMessage, error) {
 	var messages []entities.GroupMessage
 
 	err := r.db.

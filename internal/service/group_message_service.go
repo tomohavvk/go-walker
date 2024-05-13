@@ -9,39 +9,24 @@ import (
 	"time"
 )
 
-type GroupMessagesService struct {
+type GroupMessagesService interface {
+	Create(deviceId string, groupMessageCreate ws.CreateGroupMessageIn) (*ws.CreateGroupMessageOut, error)
+	GetAllByGroupId(getMessages ws.GetGroupMessagesIn) (*ws.GetGroupMessagesOut, error)
+}
+
+type GroupMessagesServiceImpl struct {
 	logger                 slog.Logger
 	groupMessageRepository repository.GroupMessagesRepository
 }
 
 func NewGroupMessagesService(logger slog.Logger, groupMessageRepository repository.GroupMessagesRepository) GroupMessagesService {
-	return GroupMessagesService{
+	return GroupMessagesServiceImpl{
 		logger:                 logger,
 		groupMessageRepository: groupMessageRepository,
 	}
 }
 
-// FIXME chech group access for device
-func (s GroupMessagesService) GetAllByGroupId(getMessages ws.GetGroupMessagesIn) (*ws.GetGroupMessagesOut, error) {
-	result, err := s.groupMessageRepository.FindAllByGroupId(getMessages.GroupId, getMessages.Limit, getMessages.Offset)
-	if err != nil {
-		return nil, err
-	}
-	var messages = make([]views.GroupMessageView, len(result))
-
-	for i, message := range result {
-		messages[i] = views.GroupMessageView{
-			GroupId:        message.GroupId,
-			AuthorDeviceId: message.AuthorDeviceId,
-			Message:        message.Message,
-			CreatedAt:      message.CreatedAt,
-		}
-	}
-
-	return &ws.GetGroupMessagesOut{Messages: messages}, nil
-}
-
-func (s GroupMessagesService) Create(deviceId string, groupMessageCreate ws.CreateGroupMessageIn) (*ws.CreateGroupMessageOut, error) {
+func (s GroupMessagesServiceImpl) Create(deviceId string, groupMessageCreate ws.CreateGroupMessageIn) (*ws.CreateGroupMessageOut, error) {
 	now := time.Now()
 
 	var groupMessage = entities.GroupMessage{
@@ -58,4 +43,24 @@ func (s GroupMessagesService) Create(deviceId string, groupMessageCreate ws.Crea
 	}
 
 	return &ws.CreateGroupMessageOut{GroupId: groupMessage.GroupId, AuthorDeviceId: deviceId, Message: groupMessage.Message, CreatedAt: groupMessage.CreatedAt}, nil
+}
+
+// FIXME chech group access for device
+func (s GroupMessagesServiceImpl) GetAllByGroupId(getMessages ws.GetGroupMessagesIn) (*ws.GetGroupMessagesOut, error) {
+	result, err := s.groupMessageRepository.FindAllByGroupId(getMessages.GroupId, getMessages.Limit, getMessages.Offset)
+	if err != nil {
+		return nil, err
+	}
+	var messages = make([]views.GroupMessageView, len(result))
+
+	for i, message := range result {
+		messages[i] = views.GroupMessageView{
+			GroupId:        message.GroupId,
+			AuthorDeviceId: message.AuthorDeviceId,
+			Message:        message.Message,
+			CreatedAt:      message.CreatedAt,
+		}
+	}
+
+	return &ws.GetGroupMessagesOut{Messages: messages}, nil
 }

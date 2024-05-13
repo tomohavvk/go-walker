@@ -38,7 +38,7 @@ func (h Routes) RegisterWSRoutes(engine *gin.Engine) {
 
 	engine.GET("api/v1/ws/:deviceId", func(c *gin.Context) {
 		deviceId := c.Param("deviceId")
-		h.logger.Debug("HANDLE DEVICE")
+
 		if err := h.handle(deviceId, upgrader, c.Writer, c.Request, hub); err != nil {
 			h.logger.Error("Error during handle ws connection:", "err", err.Error())
 

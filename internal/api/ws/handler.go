@@ -67,7 +67,7 @@ func (h WebsocketHandler) handlePersistLocation(deviceId string, messageIn ws.Me
 		return h.asWSError(err)
 	}
 
-	result, err := h.deviceLocationService.Persist(deviceId, locationPersist.Locations)
+	result, err := h.deviceLocationService.PersistLocations(deviceId, locationPersist.Locations)
 	if err != nil {
 		return h.asWSError(err)
 	}
@@ -108,14 +108,9 @@ func (h WebsocketHandler) handleCreateGroupMessage(deviceId string, messageIn ws
 		return h.asWSError(err)
 	}
 
-	hub.broadcastGroupMessage <- *result
+	hub.broadcastGroupMessage <- result
 
 	return nil
-	//data, _ := json.Marshal(result)
-	//return &ws.MessageOut{
-	//	Type: ws.CreateGroupMessageOutType,
-	//	Data: data,
-	//}
 }
 
 func (h WebsocketHandler) handleGetGroupMessages(messageIn ws.MessageIn) *ws.MessageOut {

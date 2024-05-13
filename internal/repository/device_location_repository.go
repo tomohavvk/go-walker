@@ -7,17 +7,21 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type DeviceLocationRepository struct {
+type DeviceLocationRepository interface {
+	UpsertBatch(locations []entities.DeviceLocation) error
+}
+
+type DeviceLocationRepositoryImpl struct {
 	db *gorm.DB
 }
 
 func NewDeviceLocationRepository(db *gorm.DB) DeviceLocationRepository {
-	return DeviceLocationRepository{
+	return DeviceLocationRepositoryImpl{
 		db: db,
 	}
 }
 
-func (r DeviceLocationRepository) UpsertBatch(locations []entities.DeviceLocation) error {
+func (r DeviceLocationRepositoryImpl) UpsertBatch(locations []entities.DeviceLocation) error {
 	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "device_id"}, {Name: "time"}},
 		DoNothing: true,

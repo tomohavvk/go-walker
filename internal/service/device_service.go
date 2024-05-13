@@ -7,19 +7,24 @@ import (
 	"time"
 )
 
-type DeviceService struct {
+type DeviceService interface {
+	Register(deviceId string) error
+	Unregister(deviceId string) error
+}
+
+type DeviceServiceImpl struct {
 	logger           slog.Logger
 	deviceRepository repository.DeviceRepository
 }
 
 func NewDeviceService(logger slog.Logger, deviceRepository repository.DeviceRepository) DeviceService {
-	return DeviceService{
+	return DeviceServiceImpl{
 		logger:           logger,
 		deviceRepository: deviceRepository,
 	}
 }
 
-func (s DeviceService) Register(deviceId string) error {
+func (s DeviceServiceImpl) Register(deviceId string) error {
 	now := time.Now()
 
 	var device = entities.Device{
@@ -32,6 +37,6 @@ func (s DeviceService) Register(deviceId string) error {
 	return s.deviceRepository.Register(device)
 }
 
-func (s DeviceService) Unregister(deviceId string) error {
+func (s DeviceServiceImpl) Unregister(deviceId string) error {
 	return s.deviceRepository.Unregister(deviceId)
 }

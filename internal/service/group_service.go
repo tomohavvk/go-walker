@@ -11,47 +11,28 @@ import (
 	"time"
 )
 
-type GroupService struct {
+type GroupService interface {
+	Create(deviceId string, groupCreate ws.CreateGroupIn) (*ws.CreateGroupOut, error)
+	SearchGroups(deviceId string, searchGroups ws.SearchGroupsIn) (*ws.SearchGroupsOut, error)
+	GetAllByDeviceId(deviceId string, groupGet ws.GetGroupsIn) (*ws.GetGroupsOut, error)
+	Join(deviceId string, joinGroup ws.JoinGroupIn) (*ws.JoinGroupOut, error)
+	IsPublicIdAvailable(publicId string) (*ws.IsPublicIdAvailableOut, error)
+	FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error)
+}
+
+type GroupServiceImpl struct {
 	logger          slog.Logger
 	groupRepository repository.GroupRepository
 }
 
 func NewGroupService(logger slog.Logger, groupRepository repository.GroupRepository) GroupService {
-	return GroupService{
+	return GroupServiceImpl{
 		logger:          logger,
 		groupRepository: groupRepository,
 	}
 }
 
-func (s GroupService) SearchGroups(deviceId string, searchGroups ws.SearchGroupsIn) (*ws.SearchGroupsOut, error) {
-	result, err := s.groupRepository.SearchGroups(deviceId, searchGroups.Filter, searchGroups.Limit, searchGroups.Offset)
-	if err != nil {
-		return nil, err
-	}
-	var groups = make([]views.GroupView, len(result))
-
-	for i, group := range result {
-		groups[i] = group.AsView()
-	}
-
-	return &ws.SearchGroupsOut{Groups: groups}, nil
-}
-
-func (s GroupService) GetAllByDeviceId(deviceId string, groupGet ws.GetGroupsIn) (*ws.GetGroupsOut, error) {
-	result, err := s.groupRepository.FindAllByDeviceId(deviceId, groupGet.Limit, groupGet.Offset)
-	if err != nil {
-		return nil, err
-	}
-	var groups = make([]views.GroupView, len(result))
-
-	for i, group := range result {
-		groups[i] = group.AsView()
-	}
-
-	return &ws.GetGroupsOut{Groups: groups}, nil
-}
-
-func (s GroupService) Create(deviceId string, groupCreate ws.CreateGroupIn) (*ws.CreateGroupOut, error) {
+func (s GroupServiceImpl) Create(deviceId string, groupCreate ws.CreateGroupIn) (*ws.CreateGroupOut, error) {
 	now := time.Now()
 
 	var group = entities.Group{
@@ -83,7 +64,35 @@ func (s GroupService) Create(deviceId string, groupCreate ws.CreateGroupIn) (*ws
 	return &ws.CreateGroupOut{Group: group.AsView()}, nil
 }
 
-func (s GroupService) Join(deviceId string, joinGroup ws.JoinGroupIn) (*ws.JoinGroupOut, error) {
+func (s GroupServiceImpl) SearchGroups(deviceId string, searchGroups ws.SearchGroupsIn) (*ws.SearchGroupsOut, error) {
+	result, err := s.groupRepository.SearchGroups(deviceId, searchGroups.Filter, searchGroups.Limit, searchGroups.Offset)
+	if err != nil {
+		return nil, err
+	}
+	var groups = make([]views.GroupView, len(result))
+
+	for i, group := range result {
+		groups[i] = group.AsView()
+	}
+
+	return &ws.SearchGroupsOut{Groups: groups}, nil
+}
+
+func (s GroupServiceImpl) GetAllByDeviceId(deviceId string, groupGet ws.GetGroupsIn) (*ws.GetGroupsOut, error) {
+	result, err := s.groupRepository.FindAllByDeviceId(deviceId, groupGet.Limit, groupGet.Offset)
+	if err != nil {
+		return nil, err
+	}
+	var groups = make([]views.GroupView, len(result))
+
+	for i, group := range result {
+		groups[i] = group.AsView()
+	}
+
+	return &ws.GetGroupsOut{Groups: groups}, nil
+}
+
+func (s GroupServiceImpl) Join(deviceId string, joinGroup ws.JoinGroupIn) (*ws.JoinGroupOut, error) {
 	now := time.Now()
 
 	var deviceGroup = entities.DeviceGroup{
@@ -101,7 +110,7 @@ func (s GroupService) Join(deviceId string, joinGroup ws.JoinGroupIn) (*ws.JoinG
 	return &ws.JoinGroupOut{DeviceGroup: deviceGroup.AsView()}, nil
 }
 
-func (s GroupService) IsPublicIdAvailable(publicId string) (*ws.IsPublicIdAvailableOut, error) {
+func (s GroupServiceImpl) IsPublicIdAvailable(publicId string) (*ws.IsPublicIdAvailableOut, error) {
 	_, err := s.groupRepository.FindByPublicId(publicId)
 
 	if err != nil {
@@ -114,6 +123,6 @@ func (s GroupService) IsPublicIdAvailable(publicId string) (*ws.IsPublicIdAvaila
 	return &ws.IsPublicIdAvailableOut{Available: false}, nil
 }
 
-func (s GroupService) FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error) {
+func (s GroupServiceImpl) FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error) {
 	return s.groupRepository.FindAllOnlineDevicesIdsByGroupId(groupId)
 }

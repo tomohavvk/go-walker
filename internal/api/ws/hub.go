@@ -20,7 +20,7 @@ type Hub struct {
 	clients               map[string]*Client
 	register              chan *Client
 	unregister            chan *Client
-	broadcastGroupMessage chan ws.CreateGroupMessageOut
+	broadcastGroupMessage chan *ws.CreateGroupMessageOut
 	groupService          service.GroupService
 	deviceService         service.DeviceService
 }
@@ -31,7 +31,7 @@ func newHub(logger slog.Logger, groupService service.GroupService, deviceService
 		register:              make(chan *Client),
 		unregister:            make(chan *Client),
 		clients:               make(map[string]*Client),
-		broadcastGroupMessage: make(chan ws.CreateGroupMessageOut),
+		broadcastGroupMessage: make(chan *ws.CreateGroupMessageOut),
 		groupService:          groupService,
 		deviceService:         deviceService,
 	}
