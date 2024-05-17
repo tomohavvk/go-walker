@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"github.com/tomohavvk/go-walker/internal/repository/entities"
 	_ "gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -9,8 +10,8 @@ import (
 )
 
 type DeviceRepository interface {
-	Register(device entities.Device) error
-	Unregister(deviceId string) error
+	Register(ctx context.Context, device entities.Device) error
+	Unregister(ctx context.Context, deviceId string) error
 }
 
 type DeviceRepositoryImpl struct {
@@ -23,15 +24,15 @@ func NewDeviceRepository(db *gorm.DB) DeviceRepository {
 	}
 }
 
-func (r DeviceRepositoryImpl) Register(device entities.Device) error {
-	return r.db.Clauses(clause.OnConflict{
+func (r DeviceRepositoryImpl) Register(ctx context.Context, device entities.Device) error {
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{"status": "online", "updated_at": time.Now()}),
 	}).Create(&device).Error
 }
 
-func (r DeviceRepositoryImpl) Unregister(deviceId string) error {
-	return r.db.Model(&entities.Device{}).
+func (r DeviceRepositoryImpl) Unregister(ctx context.Context, deviceId string) error {
+	return r.db.WithContext(ctx).Model(&entities.Device{}).
 		Where("id = ?", deviceId).
 		Update("status", "offline").
 		Update("updated_at", time.Now()).Error

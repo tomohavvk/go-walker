@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -39,7 +40,7 @@ func (h Routes) RegisterWSRoutes(engine *gin.Engine) {
 	engine.GET("api/v1/ws/:deviceId", func(c *gin.Context) {
 		deviceId := c.Param("deviceId")
 
-		if err := h.handle(deviceId, upgrader, c.Writer, c.Request, hub); err != nil {
+		if err := h.handle(c, deviceId, upgrader, c.Writer, c.Request, hub); err != nil {
 			h.logger.Error("Error during handle ws connection:", "err", err.Error())
 
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -49,7 +50,7 @@ func (h Routes) RegisterWSRoutes(engine *gin.Engine) {
 	h.logger.Info("Websocket routes successfully registered")
 }
 
-func (h Routes) handle(deviceId string, upgrader websocket.Upgrader, writer http.ResponseWriter, request *http.Request, hub *Hub) error {
+func (h Routes) handle(ctx context.Context, deviceId string, upgrader websocket.Upgrader, writer http.ResponseWriter, request *http.Request, hub *Hub) error {
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		h.logger.Error("Error upgrading to WebSocket:", "err", err.Error())
@@ -79,7 +80,7 @@ func (h Routes) handle(deviceId string, upgrader websocket.Upgrader, writer http
 
 		//h.logger.Info("Received message:", "messageIn", messageIn)
 
-		messageOut := h.wsHandler.handleMessage(deviceId, messageIn, hub)
+		messageOut := h.wsHandler.handleMessage(ctx, deviceId, messageIn, hub)
 
 		if messageOut != nil {
 			if err := conn.WriteJSON(messageOut); err != nil {

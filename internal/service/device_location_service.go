@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"github.com/tomohavvk/go-walker/internal/protocol/ws"
 	"github.com/tomohavvk/go-walker/internal/repository"
 	"github.com/tomohavvk/go-walker/internal/repository/entities"
@@ -11,7 +12,7 @@ import (
 )
 
 type DeviceLocationService interface {
-	PersistLocations(deviceId string, locations []ws.DeviceLocation) (ws.PersistLocationOut, error)
+	PersistLocations(ctx context.Context, deviceId string, locations []ws.DeviceLocation) (ws.PersistLocationOut, error)
 }
 
 type DeviceLocationServiceImpl struct {
@@ -26,7 +27,7 @@ func NewDeviceLocationService(logger slog.Logger, deviceLocationRepository repos
 	}
 }
 
-func (s DeviceLocationServiceImpl) PersistLocations(deviceId string, locations []ws.DeviceLocation) (ws.PersistLocationOut, error) {
+func (s DeviceLocationServiceImpl) PersistLocations(ctx context.Context, deviceId string, locations []ws.DeviceLocation) (ws.PersistLocationOut, error) {
 	s.logger.Info("locations length", "len", len(locations))
 
 	deviceLocations := make([]entities.DeviceLocation, len(locations))
@@ -49,5 +50,5 @@ func (s DeviceLocationServiceImpl) PersistLocations(deviceId string, locations [
 
 	sort.Sort(util.DeviceLocationSort(deviceLocations))
 
-	return ws.PersistLocationOut{}, s.deviceLocationRepository.UpsertBatch(deviceLocations)
+	return ws.PersistLocationOut{}, s.deviceLocationRepository.UpsertBatch(ctx, deviceLocations)
 }

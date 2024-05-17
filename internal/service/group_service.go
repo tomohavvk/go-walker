@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"github.com/tomohavvk/go-walker/internal/protocol/views"
 	"github.com/tomohavvk/go-walker/internal/protocol/ws"
@@ -12,12 +13,12 @@ import (
 )
 
 type GroupService interface {
-	Create(deviceId string, groupCreate ws.CreateGroupIn) (*ws.CreateGroupOut, error)
-	SearchGroups(deviceId string, searchGroups ws.SearchGroupsIn) (*ws.SearchGroupsOut, error)
-	GetAllByDeviceId(deviceId string, groupGet ws.GetGroupsIn) (*ws.GetGroupsOut, error)
-	Join(deviceId string, joinGroup ws.JoinGroupIn) (*ws.JoinGroupOut, error)
-	IsPublicIdAvailable(publicId string) (*ws.IsPublicIdAvailableOut, error)
-	FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error)
+	Create(ctx context.Context, deviceId string, groupCreate ws.CreateGroupIn) (*ws.CreateGroupOut, error)
+	SearchGroups(ctx context.Context, deviceId string, searchGroups ws.SearchGroupsIn) (*ws.SearchGroupsOut, error)
+	GetAllByDeviceId(ctx context.Context, deviceId string, groupGet ws.GetGroupsIn) (*ws.GetGroupsOut, error)
+	Join(ctx context.Context, deviceId string, joinGroup ws.JoinGroupIn) (*ws.JoinGroupOut, error)
+	IsPublicIdAvailable(ctx context.Context, publicId string) (*ws.IsPublicIdAvailableOut, error)
+	FindAllOnlineDevicesIdsByGroupId(ctx context.Context, groupId string) ([]string, error)
 }
 
 type GroupServiceImpl struct {
@@ -32,7 +33,7 @@ func NewGroupService(logger slog.Logger, groupRepository repository.GroupReposit
 	}
 }
 
-func (s GroupServiceImpl) Create(deviceId string, groupCreate ws.CreateGroupIn) (*ws.CreateGroupOut, error) {
+func (s GroupServiceImpl) Create(ctx context.Context, deviceId string, groupCreate ws.CreateGroupIn) (*ws.CreateGroupOut, error) {
 	now := time.Now()
 
 	var group = entities.Group{
@@ -52,7 +53,7 @@ func (s GroupServiceImpl) Create(deviceId string, groupCreate ws.CreateGroupIn) 
 		CreatedAt: now,
 	}
 
-	err := s.groupRepository.Insert(group, deviceGroup)
+	err := s.groupRepository.Insert(ctx, group, deviceGroup)
 
 	if err != nil {
 		return nil, err
@@ -64,8 +65,8 @@ func (s GroupServiceImpl) Create(deviceId string, groupCreate ws.CreateGroupIn) 
 	return &ws.CreateGroupOut{Group: group.AsView()}, nil
 }
 
-func (s GroupServiceImpl) SearchGroups(deviceId string, searchGroups ws.SearchGroupsIn) (*ws.SearchGroupsOut, error) {
-	result, err := s.groupRepository.SearchGroups(deviceId, searchGroups.Filter, searchGroups.Limit, searchGroups.Offset)
+func (s GroupServiceImpl) SearchGroups(ctx context.Context, deviceId string, searchGroups ws.SearchGroupsIn) (*ws.SearchGroupsOut, error) {
+	result, err := s.groupRepository.SearchGroups(ctx, deviceId, searchGroups.Filter, searchGroups.Limit, searchGroups.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -78,8 +79,8 @@ func (s GroupServiceImpl) SearchGroups(deviceId string, searchGroups ws.SearchGr
 	return &ws.SearchGroupsOut{Groups: groups}, nil
 }
 
-func (s GroupServiceImpl) GetAllByDeviceId(deviceId string, groupGet ws.GetGroupsIn) (*ws.GetGroupsOut, error) {
-	result, err := s.groupRepository.FindAllByDeviceId(deviceId, groupGet.Limit, groupGet.Offset)
+func (s GroupServiceImpl) GetAllByDeviceId(ctx context.Context, deviceId string, groupGet ws.GetGroupsIn) (*ws.GetGroupsOut, error) {
+	result, err := s.groupRepository.FindAllByDeviceId(ctx, deviceId, groupGet.Limit, groupGet.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +93,7 @@ func (s GroupServiceImpl) GetAllByDeviceId(deviceId string, groupGet ws.GetGroup
 	return &ws.GetGroupsOut{Groups: groups}, nil
 }
 
-func (s GroupServiceImpl) Join(deviceId string, joinGroup ws.JoinGroupIn) (*ws.JoinGroupOut, error) {
+func (s GroupServiceImpl) Join(ctx context.Context, deviceId string, joinGroup ws.JoinGroupIn) (*ws.JoinGroupOut, error) {
 	now := time.Now()
 
 	var deviceGroup = entities.DeviceGroup{
@@ -101,7 +102,7 @@ func (s GroupServiceImpl) Join(deviceId string, joinGroup ws.JoinGroupIn) (*ws.J
 		CreatedAt: now,
 	}
 
-	err := s.groupRepository.Join(deviceGroup)
+	err := s.groupRepository.Join(ctx, deviceGroup)
 
 	if err != nil {
 		return nil, err
@@ -110,8 +111,8 @@ func (s GroupServiceImpl) Join(deviceId string, joinGroup ws.JoinGroupIn) (*ws.J
 	return &ws.JoinGroupOut{DeviceGroup: deviceGroup.AsView()}, nil
 }
 
-func (s GroupServiceImpl) IsPublicIdAvailable(publicId string) (*ws.IsPublicIdAvailableOut, error) {
-	_, err := s.groupRepository.FindByPublicId(publicId)
+func (s GroupServiceImpl) IsPublicIdAvailable(ctx context.Context, publicId string) (*ws.IsPublicIdAvailableOut, error) {
+	_, err := s.groupRepository.FindByPublicId(ctx, publicId)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -123,6 +124,6 @@ func (s GroupServiceImpl) IsPublicIdAvailable(publicId string) (*ws.IsPublicIdAv
 	return &ws.IsPublicIdAvailableOut{Available: false}, nil
 }
 
-func (s GroupServiceImpl) FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error) {
-	return s.groupRepository.FindAllOnlineDevicesIdsByGroupId(groupId)
+func (s GroupServiceImpl) FindAllOnlineDevicesIdsByGroupId(ctx context.Context, groupId string) ([]string, error) {
+	return s.groupRepository.FindAllOnlineDevicesIdsByGroupId(ctx, groupId)
 }

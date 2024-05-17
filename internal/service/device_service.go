@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"github.com/tomohavvk/go-walker/internal/repository"
 	"github.com/tomohavvk/go-walker/internal/repository/entities"
 	"log/slog"
@@ -8,8 +9,8 @@ import (
 )
 
 type DeviceService interface {
-	Register(deviceId string, remoteAddr string) error
-	Unregister(deviceId string) error
+	Register(ctx context.Context, deviceId string, remoteAddr string) error
+	Unregister(ctx context.Context, deviceId string) error
 }
 
 type DeviceServiceImpl struct {
@@ -24,7 +25,7 @@ func NewDeviceService(logger slog.Logger, deviceRepository repository.DeviceRepo
 	}
 }
 
-func (s DeviceServiceImpl) Register(deviceId string, remoteAddr string) error {
+func (s DeviceServiceImpl) Register(ctx context.Context, deviceId string, remoteAddr string) error {
 	now := time.Now()
 
 	var device = entities.Device{
@@ -35,9 +36,9 @@ func (s DeviceServiceImpl) Register(deviceId string, remoteAddr string) error {
 		UpdatedAt:  now,
 	}
 
-	return s.deviceRepository.Register(device)
+	return s.deviceRepository.Register(ctx, device)
 }
 
-func (s DeviceServiceImpl) Unregister(deviceId string) error {
-	return s.deviceRepository.Unregister(deviceId)
+func (s DeviceServiceImpl) Unregister(ctx context.Context, deviceId string) error {
+	return s.deviceRepository.Unregister(ctx, deviceId)
 }

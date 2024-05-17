@@ -22,6 +22,20 @@ import (
 )
 
 func main() {
+	//go func() {
+	//	for {
+	//		numGoroutines := runtime.NumGoroutine()
+	//		fmt.Println("Number of goroutines:", numGoroutines)
+	//		time.Sleep(time.Second) // Print every second
+	//	}
+	//}()
+	//traceFile, err := os.Create("trace.out")
+	//if err != nil {
+	//	log.Fatalf("failed to create trace output file: %v", err)
+	//}
+	//defer traceFile.Close()
+	//trace.Start(traceFile)
+
 	cfg := config.LoadConfig()
 
 	if err := runDBMigration(cfg); err != nil {

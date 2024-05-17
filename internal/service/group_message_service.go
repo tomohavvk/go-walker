@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"github.com/tomohavvk/go-walker/internal/protocol/views"
 	"github.com/tomohavvk/go-walker/internal/protocol/ws"
 	"github.com/tomohavvk/go-walker/internal/repository"
@@ -10,8 +11,8 @@ import (
 )
 
 type GroupMessagesService interface {
-	Create(deviceId string, groupMessageCreate ws.CreateGroupMessageIn) (*ws.CreateGroupMessageOut, error)
-	GetAllByGroupId(getMessages ws.GetGroupMessagesIn) (*ws.GetGroupMessagesOut, error)
+	Create(ctx context.Context, deviceId string, groupMessageCreate ws.CreateGroupMessageIn) (*ws.CreateGroupMessageOut, error)
+	GetAllByGroupId(ctx context.Context, getMessages ws.GetGroupMessagesIn) (*ws.GetGroupMessagesOut, error)
 }
 
 type GroupMessagesServiceImpl struct {
@@ -26,7 +27,7 @@ func NewGroupMessagesService(logger slog.Logger, groupMessageRepository reposito
 	}
 }
 
-func (s GroupMessagesServiceImpl) Create(deviceId string, groupMessageCreate ws.CreateGroupMessageIn) (*ws.CreateGroupMessageOut, error) {
+func (s GroupMessagesServiceImpl) Create(ctx context.Context, deviceId string, groupMessageCreate ws.CreateGroupMessageIn) (*ws.CreateGroupMessageOut, error) {
 	now := time.Now()
 
 	var groupMessage = entities.GroupMessage{
@@ -36,7 +37,7 @@ func (s GroupMessagesServiceImpl) Create(deviceId string, groupMessageCreate ws.
 		CreatedAt:      now,
 	}
 
-	err := s.groupMessageRepository.Insert(groupMessage)
+	err := s.groupMessageRepository.Insert(ctx, groupMessage)
 
 	if err != nil {
 		return nil, err
@@ -46,8 +47,8 @@ func (s GroupMessagesServiceImpl) Create(deviceId string, groupMessageCreate ws.
 }
 
 // FIXME chech group access for device
-func (s GroupMessagesServiceImpl) GetAllByGroupId(getMessages ws.GetGroupMessagesIn) (*ws.GetGroupMessagesOut, error) {
-	result, err := s.groupMessageRepository.FindAllByGroupId(getMessages.GroupId, getMessages.Limit, getMessages.Offset)
+func (s GroupMessagesServiceImpl) GetAllByGroupId(ctx context.Context, getMessages ws.GetGroupMessagesIn) (*ws.GetGroupMessagesOut, error) {
+	result, err := s.groupMessageRepository.FindAllByGroupId(ctx, getMessages.GroupId, getMessages.Limit, getMessages.Offset)
 	if err != nil {
 		return nil, err
 	}

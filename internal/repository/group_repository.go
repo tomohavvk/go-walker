@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"github.com/tomohavvk/go-walker/internal/repository/entities"
 	_ "gorm.io/driver/postgres"
@@ -8,12 +9,12 @@ import (
 )
 
 type GroupRepository interface {
-	Insert(group entities.Group, deviceGroup entities.DeviceGroup) error
-	Join(deviceGroup entities.DeviceGroup) error
-	FindByPublicId(publicId string) (*entities.Group, error)
-	FindAllByDeviceId(deviceId string, limit int, offset int) ([]entities.Group, error)
-	SearchGroups(deviceId string, filter string, limit int, offset int) ([]entities.Group, error)
-	FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error)
+	Insert(ctx context.Context, group entities.Group, deviceGroup entities.DeviceGroup) error
+	Join(ctx context.Context, deviceGroup entities.DeviceGroup) error
+	FindByPublicId(ctx context.Context, publicId string) (*entities.Group, error)
+	FindAllByDeviceId(ctx context.Context, deviceId string, limit int, offset int) ([]entities.Group, error)
+	SearchGroups(ctx context.Context, deviceId string, filter string, limit int, offset int) ([]entities.Group, error)
+	FindAllOnlineDevicesIdsByGroupId(ctx context.Context, groupId string) ([]string, error)
 }
 
 type GroupRepositoryImpl struct {
@@ -26,8 +27,8 @@ func NewGroupRepository(db *gorm.DB) GroupRepository {
 	}
 }
 
-func (r GroupRepositoryImpl) Insert(group entities.Group, deviceGroup entities.DeviceGroup) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
+func (r GroupRepositoryImpl) Insert(ctx context.Context, group entities.Group, deviceGroup entities.DeviceGroup) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
 		if err := tx.Create(&group).Error; err != nil {
 			return err
@@ -41,21 +42,22 @@ func (r GroupRepositoryImpl) Insert(group entities.Group, deviceGroup entities.D
 	})
 }
 
-func (r GroupRepositoryImpl) Join(deviceGroup entities.DeviceGroup) error {
-	return r.db.Table("devices_groups").Create(&deviceGroup).Error
+func (r GroupRepositoryImpl) Join(ctx context.Context, deviceGroup entities.DeviceGroup) error {
+	return r.db.WithContext(ctx).Table("devices_groups").Create(&deviceGroup).Error
 }
 
-func (r GroupRepositoryImpl) FindByPublicId(publicId string) (*entities.Group, error) {
+func (r GroupRepositoryImpl) FindByPublicId(ctx context.Context, publicId string) (*entities.Group, error) {
 	var group entities.Group
-	err := r.db.First(&group, "public_id = ?", publicId).Error
+	err := r.db.WithContext(ctx).First(&group, "public_id = ?", publicId).Error
 
 	return &group, err
 }
 
-func (r GroupRepositoryImpl) FindAllByDeviceId(deviceId string, limit int, offset int) ([]entities.Group, error) {
+func (r GroupRepositoryImpl) FindAllByDeviceId(ctx context.Context, deviceId string, limit int, offset int) ([]entities.Group, error) {
 	var groups []entities.Group
 
 	err := r.db.
+		WithContext(ctx).
 		Raw(`
          select
            groups.id,
@@ -78,7 +80,7 @@ func (r GroupRepositoryImpl) FindAllByDeviceId(deviceId string, limit int, offse
 	return groups, err
 }
 
-func (r GroupRepositoryImpl) SearchGroups(deviceId string, filter string, limit int, offset int) ([]entities.Group, error) {
+func (r GroupRepositoryImpl) SearchGroups(ctx context.Context, deviceId string, filter string, limit int, offset int) ([]entities.Group, error) {
 	var groups []entities.Group
 
 	var nameLike string
@@ -92,6 +94,7 @@ func (r GroupRepositoryImpl) SearchGroups(deviceId string, filter string, limit 
 	var publicIdLike = fmt.Sprintf("%s%%", filter)
 
 	err := r.db.
+		WithContext(ctx).
 		Raw(`
          select
            groups.id,
@@ -120,10 +123,11 @@ func (r GroupRepositoryImpl) SearchGroups(deviceId string, filter string, limit 
 	return groups, err
 }
 
-func (r GroupRepositoryImpl) FindAllOnlineDevicesIdsByGroupId(groupId string) ([]string, error) {
+func (r GroupRepositoryImpl) FindAllOnlineDevicesIdsByGroupId(ctx context.Context, groupId string) ([]string, error) {
 	var onlineDeviceIds []string
 
 	err := r.db.
+		WithContext(ctx).
 		Raw(`
          select
            devices_groups.device_id

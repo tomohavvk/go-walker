@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/tomohavvk/go-walker/internal/protocol/ws"
@@ -44,7 +45,7 @@ func (h Hub) run() {
 		case client := <-h.register:
 			h.logger.Debug("Registering device with id:", "deviceId", client.deviceId, "remoteAddr", client.conn.RemoteAddr().String())
 
-			if err := h.deviceService.Register(client.deviceId, strings.Split(client.conn.RemoteAddr().String(), ":")[0]); err != nil {
+			if err := h.deviceService.Register(context.Background(), client.deviceId, strings.Split(client.conn.RemoteAddr().String(), ":")[0]); err != nil {
 				h.logger.Error("Error registering device:", "err", err.Error())
 			} else {
 				h.clients[client.deviceId] = client
@@ -57,7 +58,7 @@ func (h Hub) run() {
 				} else {
 					h.logger.Debug("Unregistering device with id:", "deviceId", received.deviceId)
 
-					if err := h.deviceService.Unregister(received.deviceId); err != nil {
+					if err := h.deviceService.Unregister(context.Background(), received.deviceId); err != nil {
 						h.logger.Error("Error unregistering device:", "deviceId", received.deviceId, "err", err.Error())
 					}
 
@@ -67,7 +68,7 @@ func (h Hub) run() {
 
 		case message := <-h.broadcastGroupMessage:
 
-			onlineDeviceIds, err := h.groupService.FindAllOnlineDevicesIdsByGroupId(message.GroupId)
+			onlineDeviceIds, err := h.groupService.FindAllOnlineDevicesIdsByGroupId(context.Background(), message.GroupId)
 
 			if err != nil {
 				h.logger.Error("Error during fetching device ids by group id:", "err", err.Error())
