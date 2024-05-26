@@ -51,7 +51,7 @@ type DeviceGroup struct {
 }
 
 func (g Group) AsView() views.GroupView {
-	var isJoined bool = false
+	var isJoined = false
 
 	if g.IsJoined != nil {
 		isJoined = *g.IsJoined
@@ -71,10 +71,23 @@ func (g Group) AsView() views.GroupView {
 }
 
 func (g DeviceGroup) AsView() views.DeviceGroupView {
-
 	return views.DeviceGroupView{
 		GroupId:   g.GroupId,
 		DeviceId:  g.DeviceId,
 		CreatedAt: g.CreatedAt,
+	}
+}
+
+func (d DeviceLocation) AsView() views.DeviceLocationView {
+	return views.DeviceLocationView{
+		DeviceId:         d.DeviceId,
+		Latitude:         d.Latitude,
+		Longitude:        d.Longitude,
+		Accuracy:         d.Accuracy,
+		Altitude:         d.Altitude,
+		Speed:            d.Speed,
+		Bearing:          d.Bearing,
+		AltitudeAccuracy: d.AltitudeAccuracy,
+		Time:             d.Time,
 	}
 }

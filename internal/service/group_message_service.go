@@ -46,7 +46,7 @@ func (s GroupMessagesServiceImpl) Create(ctx context.Context, deviceId string, g
 	return &ws.CreateGroupMessageOut{GroupId: groupMessage.GroupId, AuthorDeviceId: deviceId, Message: groupMessage.Message, CreatedAt: groupMessage.CreatedAt}, nil
 }
 
-// FIXME chech group access for device
+// FIXME check group access for device
 func (s GroupMessagesServiceImpl) GetAllByGroupId(ctx context.Context, getMessages ws.GetGroupMessagesIn) (*ws.GetGroupMessagesOut, error) {
 	result, err := s.groupMessageRepository.FindAllByGroupId(ctx, getMessages.GroupId, getMessages.Limit, getMessages.Offset)
 	if err != nil {

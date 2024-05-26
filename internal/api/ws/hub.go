@@ -68,6 +68,7 @@ func (h Hub) run() {
 
 		case message := <-h.broadcastGroupMessage:
 
+			// TODO USE CACHE PROBABLY
 			onlineDeviceIds, err := h.groupService.FindAllOnlineDevicesIdsByGroupId(context.Background(), message.GroupId)
 
 			if err != nil {
@@ -91,6 +92,7 @@ func (h Hub) run() {
 					break
 				}
 			}
+			//default:
 		}
 	}
 }

@@ -14,11 +14,13 @@ import (
 	"github.com/tomohavvk/go-walker/logging"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 )
 
 func main() {
@@ -61,8 +63,8 @@ func main() {
 
 	wsHandler := ws.NewWSMessageHandler(logger, deviceService, groupService, groupMessagesService, deviceLocationService)
 
-	//engine := gin.Default()
-	engine := gin.New()
+	engine := gin.Default()
+	//engine := gin.New()
 
 	api.NewRoutes(logger).RegisterHTTPRoutes(engine)
 	ws.NewRoutes(logger, wsHandler, groupService, deviceService).RegisterWSRoutes(engine)
@@ -108,8 +110,17 @@ func main() {
 func initDBConnection(cfg config.DBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%d sslmode=disable",
 		cfg.User, cfg.Password, cfg.Name, cfg.Host, cfg.Port)
-
-	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Info,
+			IgnoreRecordNotFoundError: true,
+			ParameterizedQueries:      true,
+			Colorful:                  false,
+		},
+	)
+	return gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: newLogger})
 }
 
 func runDBMigration(cfg config.AppConfig) error {

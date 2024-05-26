@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/tomohavvk/go-walker/internal/protocol/views"
 	"github.com/tomohavvk/go-walker/internal/protocol/ws"
 	"github.com/tomohavvk/go-walker/internal/repository"
 	"github.com/tomohavvk/go-walker/internal/repository/entities"
@@ -12,7 +13,8 @@ import (
 )
 
 type DeviceLocationService interface {
-	PersistLocations(ctx context.Context, deviceId string, locations []ws.DeviceLocation) (ws.PersistLocationOut, error)
+	PersistLocations(ctx context.Context, deviceId string, locationPersist ws.LocationPersistIn) (ws.PersistLocationOut, error)
+	GetLatestDevicesLocationsByGroupId(ctx context.Context, deviceId string, groupDevicesLocations ws.GroupDevicesLocationsIn) (*ws.GroupDevicesLocationsOut, error)
 }
 
 type DeviceLocationServiceImpl struct {
@@ -27,11 +29,11 @@ func NewDeviceLocationService(logger slog.Logger, deviceLocationRepository repos
 	}
 }
 
-func (s DeviceLocationServiceImpl) PersistLocations(ctx context.Context, deviceId string, locations []ws.DeviceLocation) (ws.PersistLocationOut, error) {
-	s.logger.Info("locations length", "len", len(locations))
+func (s DeviceLocationServiceImpl) PersistLocations(ctx context.Context, deviceId string, locationPersist ws.LocationPersistIn) (ws.PersistLocationOut, error) {
+	s.logger.Info("locations length", "len", len(locationPersist.Locations))
 
-	deviceLocations := make([]entities.DeviceLocation, len(locations))
-	for i, location := range locations {
+	deviceLocations := make([]entities.DeviceLocation, len(locationPersist.Locations))
+	for i, location := range locationPersist.Locations {
 
 		deviceLocation := entities.DeviceLocation{
 			DeviceId:         deviceId,
@@ -51,4 +53,18 @@ func (s DeviceLocationServiceImpl) PersistLocations(ctx context.Context, deviceI
 	sort.Sort(util.DeviceLocationSort(deviceLocations))
 
 	return ws.PersistLocationOut{}, s.deviceLocationRepository.UpsertBatch(ctx, deviceLocations)
+}
+
+func (s DeviceLocationServiceImpl) GetLatestDevicesLocationsByGroupId(ctx context.Context, deviceId string, groupDevicesLocations ws.GroupDevicesLocationsIn) (*ws.GroupDevicesLocationsOut, error) {
+	result, err := s.deviceLocationRepository.GetLatestDevicesLocationsByGroupId(ctx, deviceId, groupDevicesLocations.GroupId)
+	if err != nil {
+		return nil, err
+	}
+	var locations = make([]views.DeviceLocationView, len(result))
+
+	for i, location := range result {
+		locations[i] = location.AsView()
+	}
+
+	return &ws.GroupDevicesLocationsOut{Locations: locations}, nil
 }

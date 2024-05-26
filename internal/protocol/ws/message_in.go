@@ -7,14 +7,15 @@ import (
 type MessageInType string
 
 const (
-	PersistLocationInType     MessageInType = "persist_location"
-	CreateGroupInType         MessageInType = "create_group"
-	JoinGroupInType           MessageInType = "join_group"
-	GetGroupsInType           MessageInType = "get_groups"
-	CreateGroupMessageInType  MessageInType = "create_group_message"
-	GetGroupMessagesInType    MessageInType = "get_group_messages"
-	SearchGroupsInType        MessageInType = "search_groups"
-	IsPublicIdAvailableInType MessageInType = "is_public_id_available"
+	PersistLocationInType       MessageInType = "persist_location"
+	GroupDevicesLocationsInType MessageInType = "group_devices_locations"
+	CreateGroupInType           MessageInType = "create_group"
+	JoinGroupInType             MessageInType = "join_group"
+	GetGroupsInType             MessageInType = "get_groups"
+	CreateGroupMessageInType    MessageInType = "create_group_message"
+	GetGroupMessagesInType      MessageInType = "get_group_messages"
+	SearchGroupsInType          MessageInType = "search_groups"
+	IsPublicIdAvailableInType   MessageInType = "is_public_id_available"
 )
 
 type MessageIn struct {
@@ -35,6 +36,10 @@ type DeviceLocation struct {
 
 type LocationPersistIn struct {
 	Locations []DeviceLocation `json:"locations"`
+}
+
+type GroupDevicesLocationsIn struct {
+	GroupId string `json:"group_id"`
 }
 
 type CreateGroupIn struct {

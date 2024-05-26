@@ -16,13 +16,13 @@ create index if not exists device_id_status_idx on devices (id, status);
 create table if not exists device_locations
 (
     device_id         varchar(64) not null references devices (id) on delete cascade,
-    latitude          int         not null,
-    longitude         int         not null,
-    accuracy          int         not null,
-    altitude          int         not null,
-    speed             int         not null,
-    bearing           int         not null,
-    altitude_accuracy int         not null,
+    latitude          numeric     not null,
+    longitude         numeric     not null,
+    accuracy          numeric     not null,
+    altitude          numeric     not null,
+    speed             numeric     not null,
+    bearing           numeric     not null,
+    altitude_accuracy numeric     not null,
     time              timestamp   not null
 );
 
@@ -51,19 +51,18 @@ create index if not exists groups_updated_at_idx on groups (updated_at desc);
 create table if not exists devices_groups
 (
     device_id  varchar(64) not null references devices (id) on delete cascade,
-    group_id   varchar(64) not null references groups (id) on delete cascade,
+    group_id   varchar(21) not null references groups (id) on delete cascade,
     created_at timestamp   not null
 );
 
 create unique index if not exists devices_groups_device_id_group_id_idx on devices_groups (device_id, group_id);
 
-
 create table if not exists group_messages
 (
-    group_id         varchar(64)  not null references groups (id) on delete cascade,
+    group_id         varchar(21)  not null references groups (id) on delete cascade,
     author_device_id varchar(64)  not null references devices (id) on delete cascade,
     message          varchar(512) not null,
-    created_at        timestamp    not null
+    created_at       timestamp    not null
 );
 
 SELECT create_hypertable('group_messages', 'created_at');
